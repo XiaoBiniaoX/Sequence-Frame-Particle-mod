@@ -4,6 +4,7 @@
 如果你愿意，你可以通过命令设置延迟或fps的粒子播放值，
 从某种意义来讲，你可以拿这个播放动画到游戏中 也可以设置方向性等让粒子朝着某处飞出去 
 序列图材质放在resourcepacks\材质\assets\xulielizimod\textures\particle下
+本 Mod 仅供个人学习与娱乐使用，禁止未经作者授权的团队转载或商用。
 
 Sequence-Frame-Particle-mod
 
