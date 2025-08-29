@@ -31,7 +31,7 @@ public class SequenceParticleType {
 
     @SubscribeEvent
     public static void registerFactories(RegisterParticleProvidersEvent event) {
-        // 正确的写法：注册时把 SpriteSet 交给 Provider
         event.registerSpriteSet(SEQUENCE_PARTICLE, Provider::new);
     }
 }
+
