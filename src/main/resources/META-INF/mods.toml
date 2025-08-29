@@ -1,10 +1,10 @@
-modLoader="javafml" # 必填
-loaderVersion="[47,)" # Forge 47.x 都能运行
+modLoader="javafml"
+loaderVersion="[47,)"
 
 license="NC"
 
 [[mods]]
-modId="xulielizimod"   # 必须和 @Mod("xulielizimod") 一致
+modId="xulielizimod"
 version="1.0.0"
 displayName="彬的序列粒子"
 displayURL="https://space.bilibili.com/353609880"
