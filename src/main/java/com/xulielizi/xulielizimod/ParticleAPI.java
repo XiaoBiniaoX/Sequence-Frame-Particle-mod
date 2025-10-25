@@ -28,9 +28,19 @@ public class ParticleAPI {
         ParticleManager.spawnC(viewer, x, y, z, fps, size, unit, time, imagePath, loop, brightness);
     }
 
+    public static void spawnScreenParticle(ServerPlayer viewer, int fps, int unit, int time, 
+                                         String imagePath, boolean loop, int brightness) {
+        ParticleManager.spawnScreen(viewer, fps, unit, time, imagePath, loop, brightness);
+    }
+
     public static void stopParticles(ServerPlayer viewer, double centerX, double centerY, double centerZ, double radius) {
         StopParticlesPacket pkt = new StopParticlesPacket(centerX, centerY, centerZ, radius);
         NetworkHandler.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> viewer), pkt);
+    }
+
+    // 新增：停止屏幕粒子的API方法
+    public static void stopScreenParticles(ServerPlayer viewer) {
+        ParticleManager.stopScreenParticles(viewer);
     }
 
     public static List<LivingEntity> getEntitiesNearParticle(double x, double y, double z, double radius, ServerPlayer viewer) {

@@ -5,7 +5,7 @@ license="MIT with Non-Commercial clause"
 
 [[mods]]
 modId="xulielizimod"   # 必须和 @Mod("xulielizimod") 一致
-version="1.0.0"
+version="1.0.3"
 displayName="彬的序列粒子"
 displayURL="https://space.bilibili.com/353609880"
 authors="XiaoBiniaoX"

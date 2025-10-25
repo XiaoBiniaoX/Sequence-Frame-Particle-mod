@@ -24,7 +24,9 @@ public class ParticleCommand {
                 .then(Commands.literal("A").then(buildModeA()))
                 .then(Commands.literal("B").then(buildModeB()))
                 .then(Commands.literal("C").then(buildModeC()))
-                .then(Commands.literal("stop").then(buildStopCommand()));
+                .then(Commands.literal("see").then(buildScreenCommand()))
+                .then(Commands.literal("stop").then(buildStopCommand()))
+                .then(Commands.literal("stopscreen").then(buildStopScreenCommand()));
     }
 
     private static RequiredArgumentBuilder<CommandSourceStack, ?> buildModeA() {
@@ -207,6 +209,46 @@ public class ParticleCommand {
         return targets;
     }
 
+    private static RequiredArgumentBuilder<CommandSourceStack, ?> buildScreenCommand() {
+        var image = Commands.argument("image", StringArgumentType.string())
+                .executes(ctx -> executeScreen(ctx.getSource(), 
+                        EntityArgument.getPlayers(ctx, "targets"),
+                        IntegerArgumentType.getInteger(ctx, "fps"),
+                        IntegerArgumentType.getInteger(ctx, "unit"),
+                        IntegerArgumentType.getInteger(ctx, "time"),
+                        StringArgumentType.getString(ctx, "image"),
+                        true, 0
+                ))
+                .then(Commands.argument("loop", BoolArgumentType.bool())
+                        .executes(ctx -> executeScreen(ctx.getSource(), 
+                                EntityArgument.getPlayers(ctx, "targets"),
+                                IntegerArgumentType.getInteger(ctx, "fps"),
+                                IntegerArgumentType.getInteger(ctx, "unit"),
+                                IntegerArgumentType.getInteger(ctx, "time"),
+                                StringArgumentType.getString(ctx, "image"),
+                                BoolArgumentType.getBool(ctx, "loop"), 0
+                        ))
+                        .then(Commands.argument("brightness", IntegerArgumentType.integer(0, 15))
+                                .executes(ctx -> executeScreen(ctx.getSource(), 
+                                        EntityArgument.getPlayers(ctx, "targets"),
+                                        IntegerArgumentType.getInteger(ctx, "fps"),
+                                        IntegerArgumentType.getInteger(ctx, "unit"),
+                                        IntegerArgumentType.getInteger(ctx, "time"),
+                                        StringArgumentType.getString(ctx, "image"),
+                                        BoolArgumentType.getBool(ctx, "loop"),
+                                        IntegerArgumentType.getInteger(ctx, "brightness")
+                                ))
+                        )
+                );
+
+        var time = Commands.argument("time", IntegerArgumentType.integer(1)).then(image);
+        var unit = Commands.argument("unit", IntegerArgumentType.integer(1)).then(time);
+        var fps = Commands.argument("fps", IntegerArgumentType.integer(1)).then(unit);
+        var targets = Commands.argument("targets", EntityArgument.players()).then(fps);
+        
+        return targets;
+    }
+
     private static RequiredArgumentBuilder<CommandSourceStack, ?> buildStopCommand() {
         var radius = Commands.argument("radius", DoubleArgumentType.doubleArg(0))
                 .executes(ctx -> executeStop(ctx.getSource(),
@@ -220,6 +262,11 @@ public class ParticleCommand {
                 EntityArgument.getPlayers(ctx, "targets"),
                 0.0
         ));
+    }
+
+    private static RequiredArgumentBuilder<CommandSourceStack, ?> buildStopScreenCommand() {
+        return Commands.argument("targets", EntityArgument.players())
+                .executes(ctx -> executeStopScreen(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets")));
     }
 
     private static int executeModeA(CommandSourceStack source, Collection<ServerPlayer> targets, 
@@ -253,6 +300,15 @@ public class ParticleCommand {
         return 1;
     }
 
+    private static int executeScreen(CommandSourceStack source, Collection<ServerPlayer> targets,
+                                   int fps, int unit, int time, String image, boolean loop, int brightness) {
+        for (ServerPlayer player : targets) {
+            ParticleManager.spawnScreen(player, fps, unit, time, image, loop, brightness);
+        }
+        source.sendSuccess(() -> Component.literal("彬在屏幕上播放出来力"), true);
+        return 1;
+    }
+
     private static int executeStop(CommandSourceStack source, Collection<ServerPlayer> targets, double radius) {
         Vec3 center = source.getPosition();
         for (ServerPlayer player : targets) {
@@ -260,6 +316,14 @@ public class ParticleCommand {
             NetworkHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), pkt);
         }
         source.sendSuccess(() -> Component.literal("彬停止力"), true);
+        return 1;
+    }
+
+    private static int executeStopScreen(CommandSourceStack source, Collection<ServerPlayer> targets) {
+        for (ServerPlayer player : targets) {
+            ParticleManager.stopScreenParticles(player);
+        }
+        source.sendSuccess(() -> Component.literal("彬停止屏幕粒子力"), true);
         return 1;
     }
 }

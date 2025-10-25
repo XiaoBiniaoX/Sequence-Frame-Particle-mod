@@ -29,4 +29,15 @@ public class ParticleManager {
         );
         NetworkHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> viewer), pkt);
     }
+
+    public static void spawnScreen(ServerPlayer viewer, int fps, int unit, int time,
+                                  String imagePath, boolean loop, int brightness) {
+        ScreenParticlePacket pkt = new ScreenParticlePacket(fps, unit, time, imagePath, loop, brightness);
+        NetworkHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> viewer), pkt);
+    }
+
+    public static void stopScreenParticles(ServerPlayer viewer) {
+        StopScreenParticlesPacket pkt = new StopScreenParticlesPacket();
+        NetworkHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> viewer), pkt);
+    }
 }

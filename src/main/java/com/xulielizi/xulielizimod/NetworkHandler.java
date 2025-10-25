@@ -17,5 +17,9 @@ public class NetworkHandler {
                 SequenceSpawnPacket::encode, SequenceSpawnPacket::decode, SequenceSpawnPacket::handle);
         CHANNEL.registerMessage(id++, StopParticlesPacket.class,
                 StopParticlesPacket::encode, StopParticlesPacket::decode, StopParticlesPacket::handle);
+        CHANNEL.registerMessage(id++, ScreenParticlePacket.class,
+                ScreenParticlePacket::encode, ScreenParticlePacket::decode, ScreenParticlePacket::handle);
+        CHANNEL.registerMessage(id++, StopScreenParticlesPacket.class,
+                StopScreenParticlesPacket::encode, StopScreenParticlesPacket::decode, StopScreenParticlesPacket::handle);
     }
 }
