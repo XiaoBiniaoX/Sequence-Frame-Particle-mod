@@ -4,7 +4,6 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
-
 import java.util.function.Supplier;
 
 public class SequenceSpawnPacket {
@@ -13,16 +12,28 @@ public class SequenceSpawnPacket {
     public final int fps, size, unit, time, brightness;
     public final String image;
     public final boolean loop;
+    public final float damage, knockbackX, knockbackY, knockbackZ;
+    public final String damageType;
+    public final float rotationX, rotationY, rotationZ;
+    public final int cooldown;
+    public final String hitbox;
 
     public SequenceSpawnPacket(char mode, double x, double y, double z, 
                               double vx, double vy, double vz, double ax, double ay, double az,
-                              int fps, int size, int unit, int time, String image, boolean loop, int brightness) {
+                              int fps, int size, int unit, int time, String image, boolean loop, int brightness,
+                              float damage, float knockbackX, float knockbackY, float knockbackZ, String damageType,
+                              float rotationX, float rotationY, float rotationZ, int cooldown, String hitbox) {
         this.mode = mode;
         this.x=x; this.y=y; this.z=z; 
         this.vx=vx; this.vy=vy; this.vz=vz;
         this.ax=ax; this.ay=ay; this.az=az;
         this.fps=fps; this.size=size; this.unit=unit; this.time=time; 
         this.image=image; this.loop=loop; this.brightness=brightness;
+        this.damage=damage; this.knockbackX=knockbackX; this.knockbackY=knockbackY; this.knockbackZ=knockbackZ;
+        this.damageType=damageType;
+        this.rotationX=rotationX; this.rotationY=rotationY; this.rotationZ=rotationZ;
+        this.cooldown=cooldown;
+        this.hitbox=hitbox;
     }
 
     public static void encode(SequenceSpawnPacket p, FriendlyByteBuf buf) {
@@ -34,6 +45,12 @@ public class SequenceSpawnPacket {
         buf.writeUtf(p.image);
         buf.writeBoolean(p.loop);
         buf.writeInt(p.brightness);
+        buf.writeFloat(p.damage);
+        buf.writeFloat(p.knockbackX); buf.writeFloat(p.knockbackY); buf.writeFloat(p.knockbackZ);
+        buf.writeUtf(p.damageType);
+        buf.writeFloat(p.rotationX); buf.writeFloat(p.rotationY); buf.writeFloat(p.rotationZ);
+        buf.writeInt(p.cooldown);
+        buf.writeUtf(p.hitbox);
     }
 
     public static SequenceSpawnPacket decode(FriendlyByteBuf buf) {
@@ -43,7 +60,11 @@ public class SequenceSpawnPacket {
                 buf.readDouble(), buf.readDouble(), buf.readDouble(),
                 buf.readDouble(), buf.readDouble(), buf.readDouble(),
                 buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt(),
-                buf.readUtf(), buf.readBoolean(), buf.readInt()
+                buf.readUtf(), buf.readBoolean(), buf.readInt(),
+                buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readUtf(),
+                buf.readFloat(), buf.readFloat(), buf.readFloat(),
+                buf.readInt(),
+                buf.readUtf()
         );
     }
 
@@ -52,7 +73,9 @@ public class SequenceSpawnPacket {
                 () -> ClientSequenceRenderer.add(
                         pkt.mode, pkt.x, pkt.y, pkt.z, pkt.vx, pkt.vy, pkt.vz,
                         pkt.ax, pkt.ay, pkt.az, pkt.fps, pkt.size, pkt.unit,
-                        pkt.time, pkt.image, pkt.loop, pkt.brightness
+                        pkt.time, pkt.image, pkt.loop, pkt.brightness,
+                        pkt.damage, pkt.knockbackX, pkt.knockbackY, pkt.knockbackZ, pkt.damageType,
+                        pkt.rotationX, pkt.rotationY, pkt.rotationZ, pkt.cooldown, pkt.hitbox
                 )
         ));
         ctx.get().setPacketHandled(true);

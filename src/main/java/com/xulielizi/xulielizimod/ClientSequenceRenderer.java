@@ -15,8 +15,9 @@ import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.ArrayList;
+import java.util.List;
 
 @Mod.EventBusSubscriber(modid = XulieliziMod.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ClientSequenceRenderer {
@@ -24,7 +25,9 @@ public class ClientSequenceRenderer {
 
     public static void add(char mode, double x, double y, double z, double vx, double vy, double vz,
                           double ax, double ay, double az, int fps, int size, int unit, int time,
-                          String imageName, boolean loop, int brightness) {
+                          String imageName, boolean loop, int brightness,
+                          float damage, float knockbackX, float knockbackY, float knockbackZ, String damageType,
+                          float rotationX, float rotationY, float rotationZ, int cooldown, String hitbox) {
         Minecraft mc = Minecraft.getInstance();
         ResourceLocation rl = new ResourceLocation(XulieliziMod.MODID, "textures/particle/" + imageName);
         
@@ -44,7 +47,23 @@ public class ClientSequenceRenderer {
         
         PARTICLES.add(new ParticleEntry(mode, x, y, z, vx, vy, vz, ax, ay, az, 
                 Math.max(1, fps), Math.max(1, size), Math.max(1, unit), 
-                Math.max(1, time), rl, loop, brightness));
+                Math.max(1, time), rl, loop, brightness,
+                damage, knockbackX, knockbackY, knockbackZ, damageType,
+                rotationX, rotationY, rotationZ, cooldown, hitbox));
+    }
+
+    public static List<DamageHandler.ParticleDamageInfo> getParticlesForDamageCheck() {
+        List<DamageHandler.ParticleDamageInfo> damageParticles = new ArrayList<>();
+        for (ParticleEntry particle : PARTICLES) {
+            if (particle.age >= particle.delayTicks && particle.damage > 0 && (particle.mode == 'C' || particle.mode == 'D')) {
+                damageParticles.add(new DamageHandler.ParticleDamageInfo(
+                    particle.x, particle.y, particle.z,
+                    particle.damage, particle.knockbackX, particle.knockbackY, particle.knockbackZ,
+                    particle.damageType, particle.size, particle.cooldown, particle.hitbox
+                ));
+            }
+        }
+        return damageParticles;
     }
 
     public static void stopParticles(double centerX, double centerY, double centerZ, double radius) {
@@ -72,18 +91,13 @@ public class ClientSequenceRenderer {
             
             int activeTime = particle.age - particle.delayTicks;
             
-            if (!particle.loop && particle.currentFrame >= particle.totalFrames - 1 && activeTime >= particle.frameDuration * particle.totalFrames) {
-                particle.shouldRemove = true;
-                continue;
-            }
-            
-            if (activeTime >= particle.lifeTicks) {
-                if (particle.loop) {
-                    particle.age = particle.delayTicks;
-                    particle.currentFrame = 0;
-                    particle.frameAcc = 0;
-                    activeTime = 0;
-                } else {
+            if (particle.loop) {
+                if (activeTime >= particle.lifeTicks) {
+                    particle.shouldRemove = true;
+                    continue;
+                }
+            } else {
+                if (particle.currentFrame >= particle.totalFrames - 1) {
                     particle.shouldRemove = true;
                     continue;
                 }
@@ -106,14 +120,13 @@ public class ClientSequenceRenderer {
                     particle.y += particle.vy;
                     particle.z += particle.vz;
                 }
-                case 'B' -> {
-                    double tickProgress = activeTime / 20.0;
-                    particle.x += particle.vx + 0.5 * particle.ax * tickProgress * tickProgress;
-                    particle.y += particle.vy + 0.5 * particle.ay * tickProgress * tickProgress;
-                    particle.z += particle.vz + 0.5 * particle.az * tickProgress * tickProgress;
-                    particle.vx += particle.ax * tickProgress;
-                    particle.vy += particle.ay * tickProgress;
-                    particle.vz += particle.az * tickProgress;
+                case 'B', 'D' -> {
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    particle.z += particle.vz;
+                    particle.vx += particle.ax;
+                    particle.vy += particle.ay;
+                    particle.vz += particle.az;
                 }
             }
         }
@@ -160,8 +173,16 @@ public class ClientSequenceRenderer {
 
             poseStack.pushPose();
             poseStack.translate(rx, ry, rz);
-            poseStack.mulPose(mc.getEntityRenderDispatcher().cameraOrientation());
-            poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
+            
+            if (particle.mode == 'D') {
+                poseStack.mulPose(Axis.XP.rotationDegrees(particle.rotationX));
+                poseStack.mulPose(Axis.YP.rotationDegrees(particle.rotationY));
+                poseStack.mulPose(Axis.ZP.rotationDegrees(particle.rotationZ));
+            } else {
+                poseStack.mulPose(mc.getEntityRenderDispatcher().cameraOrientation());
+                poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
+            }
+            
             poseStack.scale(s, s, s);
 
             RenderSystem.setShaderTexture(0, particle.rl);
@@ -188,10 +209,14 @@ public class ClientSequenceRenderer {
     private static class ParticleEntry {
         final char mode;
         double x, y, z, vx, vy, vz, ax, ay, az;
-        final int fps, size, unit, lifeTicks, delayTicks, totalFrames, brightness;
+        final int fps, size, unit, lifeTicks, delayTicks, totalFrames, brightness, cooldown;
         final ResourceLocation rl;
         final boolean loop;
         final float frameDuration;
+        final float damage, knockbackX, knockbackY, knockbackZ;
+        final String damageType;
+        final float rotationX, rotationY, rotationZ;
+        final String hitbox;
         int age = 0;
         float frameAcc = 0f;
         int currentFrame = 0;
@@ -199,7 +224,9 @@ public class ClientSequenceRenderer {
         
         ParticleEntry(char mode, double x, double y, double z, double vx, double vy, double vz,
                      double ax, double ay, double az, int fps, int size, int unit, int lifeTicks,
-                     ResourceLocation rl, boolean loop, int brightness) {
+                     ResourceLocation rl, boolean loop, int brightness,
+                     float damage, float knockbackX, float knockbackY, float knockbackZ, String damageType,
+                     float rotationX, float rotationY, float rotationZ, int cooldown, String hitbox) {
             this.mode = mode;
             this.x = x; this.y = y; this.z = z;
             this.vx = vx; this.vy = vy; this.vz = vz;
@@ -207,6 +234,11 @@ public class ClientSequenceRenderer {
             this.fps = fps; this.size = size; this.unit = unit; 
             this.lifeTicks = lifeTicks; this.delayTicks = 0;
             this.rl = rl; this.loop = loop; this.brightness = brightness;
+            this.damage = damage; this.knockbackX = knockbackX; this.knockbackY = knockbackY; this.knockbackZ = knockbackZ;
+            this.damageType = damageType;
+            this.rotationX = rotationX; this.rotationY = rotationY; this.rotationZ = rotationZ;
+            this.cooldown = cooldown;
+            this.hitbox = hitbox != null ? hitbox : "1*1*1";
             this.totalFrames = unit * unit;
             this.frameDuration = 20.0f / fps;
         }
