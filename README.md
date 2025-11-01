@@ -13,7 +13,7 @@ This mod allows playing custom sequence frame animations as particle effects in 
 * 可自定义序列帧动画播放 * / * Customizable sequence frame animation playback *
 * 支持屏幕显示粒子效果 * / * Supports screen display particle effects *
 * 内置伤害和击退系统 * / * Built-in damage and knockback system *
-* 灵活的伤害区域设置 * / * Flexible damage area settings *
+* 伤害区域设置 * / * Flexible damage area settings *
 * 多种伤害类型支持 * / * Multiple damage type support *
 
 *________________________________________________________________________________*
@@ -151,15 +151,3 @@ ParticleAPI.stopScreenParticles(serverPlayer);
 * 只有C和D模式支持伤害系统 * / * Only modes C and D support damage system *
 * 伤害会对玩家和生物都生效 * / * Damage affects both players and mobs *
 * 冷却时间防止连续伤害 * / * Cooldown prevents continuous damage *
-* 负伤害值表示治疗效果 * / * Negative damage values indicate healing effects *
-
-*________________________________________________________________________________*
-
--版本信息 / Version Information-
-
-模组版本 / Mod Version: 1.20.1-1.0.0
-适用游戏版本 / Minecraft Version: 1.20.1
-模组ID / Mod ID: xulielizimod
-开发者 / Developer: xulielizi
-
-*________________________________________________________________________________*
